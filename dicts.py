@@ -203,3 +203,25 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     for vertex in parents:
         sets_by_ancestor[find(vertex)].append(vertex)
     return {frozenset(component) for component in sets_by_ancestor.values()}
+
+
+def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
+    """
+    Make an adjacency list for an undirected graph.
+
+    >>> adjacency_undirected([])
+    {}
+    >>> adjacency_undirected([('a', 'A')])
+    {'a': {'A'}, 'A': {'a'}}
+    >>> sorted_al(adjacency_undirected([('a','b'), ('b','c'), ('c','a')]))
+    {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b']}
+    >>> sorted_al(adjacency_undirected([('a','c'), ('a','b'), ('b','c'), ('c','a')]))
+    {'a': ['b', 'c'], 'c': ['a', 'b'], 'b': ['a', 'c']}
+    >>> sorted_al(adjacency_undirected([('a', 'b'), ('c', 'b'), ('d', 'a')]))
+    {'a': ['b', 'd'], 'b': ['a', 'c'], 'c': ['b'], 'd': ['a']}
+    """
+    adj = collections.defaultdict(set)
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    return dict(adj)
