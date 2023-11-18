@@ -1,5 +1,7 @@
 """Functions dealing with dictionaries."""
 
+import collections
+
 import graphviz
 
 
@@ -197,13 +199,7 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
                 ranks[u] += 1
             parents[v] = u
 
-    sets_by_ancestor = {}
-
+    sets_by_ancestor = collections.defaultdict(list)
     for vertex in parents:
-        ancestor = find(vertex)
-        try:
-            sets_by_ancestor[ancestor].append(vertex)
-        except KeyError:
-            sets_by_ancestor[ancestor] = [vertex]
-
+        sets_by_ancestor[find(vertex)].append(vertex)
     return {frozenset(component) for component in sets_by_ancestor.values()}
