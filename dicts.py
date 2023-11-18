@@ -1,6 +1,7 @@
 """Functions dealing with dictionaries."""
 
 import collections
+from collections.abc import Callable
 
 import graphviz
 
@@ -225,3 +226,33 @@ def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
         adj[u].add(v)
         adj[v].add(u)
     return dict(adj)
+
+
+def components_dfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list, by recursive DFS.
+
+    >>> components_dfs([])
+    set()
+    >>> sorted_setoset(components_dfs( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def dfs(src: str, func: Callable[[str], None]) -> None:
+        if src in visited:
+            return
+        visited.add(src)
+        func(src)
+        for dest in adj[src]:
+            dfs(dest, func)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        dfs(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
