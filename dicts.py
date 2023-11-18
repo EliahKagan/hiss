@@ -92,7 +92,7 @@ def sorted_setoset(unsorted: set[frozenset]) -> list[list]:
 
 def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
-    Identify the connected components from an edge list
+    Identify the connected components from an edge list.
 
     >>> components([])
     set()
@@ -122,3 +122,41 @@ def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     sets_by_id = {id(component): component for component in sets.values()}
     return {frozenset(component) for component in sets_by_id.values()}
+
+
+def components_alt(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    This uses classic quick-find (with representative elements), in contrast to
+    components(), which is also quick-find but uses list references themselves.
+
+    >>> components_alt([])
+    set()
+    >>> sorted_setoset(components_alt( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    # Make singleton sets.
+    representatives = {vertex: vertex for edge in edges for vertex in edge}
+    chains = {vertex: [vertex] for vertex in representatives}
+
+    def join(to_vertex: str, from_vertex: str) -> None:
+        for vertex in chains[from_vertex]:
+            representatives[vertex] = to_vertex
+        chains[to_vertex].extend(chains[from_vertex])
+
+    # Unite each edge's endpoints' sets by size, melding smaller into larger.
+    for u, v in edges:
+        u = representatives[u]
+        v = representatives[v]
+
+        if u == v:
+            continue
+
+        if len(chains[u]) < len(chains[v]):
+            join(v, u)
+        else:
+            join(u, v)
+
+    canonical_vertices = set(representatives.values())
+    return {frozenset(chains[vertex]) for vertex in canonical_vertices}
