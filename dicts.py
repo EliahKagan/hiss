@@ -256,3 +256,43 @@ def components_dfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
         dfs(start, all_components[-1].append)
 
     return {frozenset(component) for component in all_components}
+
+
+def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list, by stack-bases search.
+
+    This is a naturally iterative algorithm that is somewhat similar to, but
+    not the same as, DFS. See:
+
+    https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html
+
+    >>> components_stack([])
+    set()
+    >>> sorted_setoset(components_stack( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def stack_search(src: str, func: Callable[[str], None]) -> None:
+        visited.add(src)
+        stack = [src]
+
+        while stack:
+            src = stack.pop()
+            func(src)
+            for dest in adj[src]:
+                if dest in visited:
+                    continue
+                visited.add(dest)
+                stack.append(dest)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        stack_search(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
