@@ -100,12 +100,12 @@ def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
-    sets = {vertex: {vertex} for edge in edges for vertex in edge}
+    sets = {vertex: [vertex] for edge in edges for vertex in edge}
 
-    def join(to_set: set[str], from_set: set[str]) -> None:
+    def join(to_set: list[str], from_set: list[str]) -> None:
         for vertex in from_set:
             sets[vertex] = to_set
-        to_set.update(from_set)
+        to_set.extend(from_set)
 
     # Unite each edge's endpoints' sets by size, melding smaller into larger.
     for u, v in edges:
