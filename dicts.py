@@ -168,7 +168,7 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list.
 
-    This uses quick-union, also known as union by rank.
+    This uses union by rank with path compression.
 
     >>> components_quickunion([])
     set()
@@ -180,8 +180,18 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     ranks = {vertex: 0 for vertex in parents}
 
     def find(elem: str) -> str:
-        while elem != parents[elem]:
-            elem = parents[elem]
+        leader = elem
+
+        # Find the ancestor.
+        while leader != parents[leader]:
+            leader = parents[leader]
+
+        # Compress the path.
+        while elem != leader:
+            parent = parents[elem]
+            parents[elem] = leader
+            elem = parent
+
         return elem
 
     # Unite each edge's endpoints' sets by rank.
