@@ -90,13 +90,13 @@ def sorted_setoset(unsorted: set[frozenset]) -> list[list]:
     return sorted(unsorted_list)
 
 
-def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list.
 
-    >>> components([])
+    >>> components_quickfind([])
     set()
-    >>> sorted_setoset(components( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> sorted_setoset(components_quickfind( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
@@ -124,16 +124,16 @@ def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     return {frozenset(component) for component in sets_by_id.values()}
 
 
-def components_alt(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+def components_quickfind_classic(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list.
 
     This uses classic quick-find (with representative elements), in contrast to
     components(), which is also quick-find but uses list references themselves.
 
-    >>> components_alt([])
+    >>> components_quickfind_classic([])
     set()
-    >>> sorted_setoset(components_alt( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> sorted_setoset(components_quickfind_classic( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
@@ -160,3 +160,50 @@ def components_alt(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     canonical_vertices = set(representatives.values())
     return {frozenset(chains[vertex]) for vertex in canonical_vertices}
+
+
+def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    This uses quick-union, also known as union by rank.
+
+    >>> components_quickunion([])
+    set()
+    >>> sorted_setoset(components_quickunion( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    # Make singleton sets.
+    parents = {vertex: vertex for edge in edges for vertex in edge}
+    ranks = {vertex: 0 for vertex in parents}
+
+    def find(elem: str) -> str:
+        while elem != parents[elem]:
+            elem = parents[elem]
+        return elem
+
+    # Unite each edge's endpoints' sets by rank.
+    for u, v in edges:
+        u = find(u)
+        v = find(v)
+
+        if u == v:
+            continue
+
+        if ranks[u] < ranks[v]:
+            parents[u] = v
+        else:
+            if ranks[u] == ranks[v]:
+                ranks[u] += 1
+            parents[v] = u
+
+    sets_by_ancestor = {}
+
+    for vertex in parents:
+        ancestor = find(vertex)
+        try:
+            sets_by_ancestor[ancestor].append(vertex)
+        except KeyError:
+            sets_by_ancestor[ancestor] = [vertex]
+
+    return {frozenset(component) for component in sets_by_ancestor.values()}
