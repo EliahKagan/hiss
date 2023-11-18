@@ -99,32 +99,36 @@ def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     >>> sorted_setoset(components( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
-    comp_list = []
-    for a, b in edges:
-        found = None
-        for n, component in enumerate(comp_list):
-            if a in component and b not in component:
-                component.add(b)
-                if found is None:
-                    found = n
-                else:
-                    comp_list[found] |= component
-                    del comp_list[n]
-                    break
-            elif a not in component and b in component:
-                component.add(a)
-                if found is None:
-                    found = n
-                else:
-                    comp_list[found] |= component
-                    del comp_list[n]
-                    break
-            elif a in component and b in component:
-                found = n
-                break
-        if found is None:
-            comp_list.append({a,b})
-    comp_set = set()
-    for component in comp_list:
-        comp_set.add(frozenset(component))
-    return comp_set
+    # Make singleton sets.
+    sets = {}
+    for u, v in edges:
+        sets[u] = {u}
+        sets[v] = {v}
+
+    def join(sink_set: set[str], source_set: set[str]) -> None:
+        for vertex in source_set:
+            sets[vertex] = sink_set
+        sink_set |= source_set
+
+    # Unite each edge's endpoints' sets by size, melding smaller into larger.
+    for u, v in edges:
+        u_set = sets[u]
+        v_set = sets[v]
+
+        if u_set is v_set:
+            continue
+
+        if len(u_set) < len(v_set):
+            join(v_set, u_set)
+        else:
+            join(u_set, v_set)
+
+    components_by_id = {}
+    for component in sets.values():
+        components_by_id[id(component)] = component
+
+    frozen_components = set()
+    for component in components_by_id.values():
+        frozen_components.add(frozenset(component))
+
+    return frozen_components
