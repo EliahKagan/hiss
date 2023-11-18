@@ -180,19 +180,9 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     ranks = {vertex: 0 for vertex in parents}
 
     def find(elem: str) -> str:
-        leader = elem
-
-        # Find the ancestor.
-        while leader != parents[leader]:
-            leader = parents[leader]
-
-        # Compress the path.
-        while elem != leader:
-            parent = parents[elem]
-            parents[elem] = leader
-            elem = parent
-
-        return elem
+        if elem != parents[elem]:
+            parents[elem] = find(parents[elem])
+        return parents[elem]
 
     # Unite each edge's endpoints' sets by rank.
     for u, v in edges:
