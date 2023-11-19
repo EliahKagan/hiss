@@ -260,7 +260,7 @@ def components_dfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
 def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
-    Identify the connected components from an edge list, by stack-bases search.
+    Identify the connected components from an edge list, by stack-based search.
 
     This is a naturally iterative algorithm that is somewhat similar to, but
     not the same as, DFS. See:
@@ -300,12 +300,7 @@ def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
 def components_bfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
-    Identify the connected components from an edge list, by stack-bases search.
-
-    This is a naturally iterative algorithm that is somewhat similar to, but
-    not the same as, DFS. See:
-
-    https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html
+    Identify the connected components from an edge list, breadth-first search.
 
     >>> components_bfs([])
     set()
