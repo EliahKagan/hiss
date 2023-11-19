@@ -232,6 +232,9 @@ def components_dfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list, by recursive DFS.
 
+    This traverses the graph using recursively implemented depth-first search, from all
+    vertices.
+
     >>> components_dfs([])
     set()
     >>> sorted_setoset(components_dfs( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
@@ -262,8 +265,9 @@ def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list, by stack-based search.
 
-    This is a naturally iterative algorithm that is somewhat similar to, but
-    not the same as, DFS. See:
+    This traverses the graph using stack-based search, from all vertices. It is
+    a naturally iterative algorithm that is somewhat similar to, but not the
+    same as, iterative DFS. See:
 
     https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html
 
@@ -300,7 +304,9 @@ def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
 def components_bfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
-    Identify the connected components from an edge list, breadth-first search.
+    Identify the connected components from an edge list, by BFS.
+
+    This traverses the graph using breadth-first search, from all vertices.
 
     >>> components_bfs([])
     set()
