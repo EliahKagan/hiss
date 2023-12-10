@@ -1,5 +1,7 @@
 doctestfn
 graphviz
+ipycanvas
+ipyevents
 ipykernel
 pytest
 ruff
