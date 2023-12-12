@@ -99,7 +99,9 @@ def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     >>> components_quickfind([])
     set()
-    >>> sorted_setoset(components_quickfind( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickfind(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
@@ -127,7 +129,9 @@ def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     return {frozenset(component) for component in sets_by_id.values()}
 
 
-def components_quickfind_classic(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+def components_quickfind_classic(
+    edges: list[tuple[str,str]],
+) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list.
 
@@ -136,7 +140,9 @@ def components_quickfind_classic(edges: list[tuple[str,str]]) -> set[frozenset[s
 
     >>> components_quickfind_classic([])
     set()
-    >>> sorted_setoset(components_quickfind_classic( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickfind_classic(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
@@ -173,7 +179,9 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     >>> components_quickunion([])
     set()
-    >>> sorted_setoset(components_quickunion( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickunion(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     # Make singleton sets.
@@ -216,7 +224,8 @@ def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
     {'a': {'A'}, 'A': {'a'}}
     >>> sorted_al(adjacency_undirected([('a','b'), ('b','c'), ('c','a')]))
     {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b']}
-    >>> sorted_al(adjacency_undirected([('a','c'), ('a','b'), ('b','c'), ('c','a')]))
+    >>> edges = [('a','c'), ('a','b'), ('b','c'), ('c','a')]
+    >>> sorted_al(adjacency_undirected(edges))
     {'a': ['b', 'c'], 'c': ['a', 'b'], 'b': ['a', 'c']}
     >>> sorted_al(adjacency_undirected([('a', 'b'), ('c', 'b'), ('d', 'a')]))
     {'a': ['b', 'd'], 'b': ['a', 'c'], 'c': ['b'], 'd': ['a']}
@@ -228,16 +237,18 @@ def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
     return dict(adj)
 
 
-def components_dfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+def components_dfs_rec(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
     Identify the connected components from an edge list, by recursive DFS.
 
-    This traverses the graph using recursively implemented depth-first search, from all
-    vertices.
+    This traverses the graph using recursively implemented depth-first search,
+    from all vertices.
 
-    >>> components_dfs([])
+    >>> components_dfs_rec([])
     set()
-    >>> sorted_setoset(components_dfs( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs_rec(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     adj = adjacency_undirected(edges)
@@ -273,7 +284,9 @@ def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     >>> components_stack([])
     set()
-    >>> sorted_setoset(components_stack( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_stack(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     adj = adjacency_undirected(edges)
@@ -310,7 +323,9 @@ def components_bfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
 
     >>> components_bfs([])
     set()
-    >>> sorted_setoset(components_bfs( [ ('1','2'), ('1','3'), ('4','5'), ('5','6'), ('3','7'), ('2','7') ] ))
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_bfs(edges))
     [['1', '2', '3', '7'], ['4', '5', '6']]
     """
     adj = adjacency_undirected(edges)
