@@ -1,9 +1,11 @@
 """Functions dealing with dictionaries."""
 
 import collections
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 import graphviz
+
+from util import identity_function
 
 
 def invert(d: dict) -> dict:
@@ -23,6 +25,30 @@ def invert(d: dict) -> dict:
     return inv_d
 
 
+def distinct(values: Iterable, *, key=None) -> list:
+    """
+    Create a list with every value of the values, but without repeating any.
+
+    >>> distinct([])
+    []
+    >>> distinct([3,6,123,1,543,1,32,1,3,3,12])
+    [3, 6, 123, 1, 543, 32, 12]
+    >>> distinct([ {1,2}, {1}, {2,2,1}, {2}, {1,1,1}], key=frozenset)
+    [{1, 2}, {1}, {2}]
+    """
+    if key is None:
+        key = identity_function
+
+    val_list = []
+    val_set = set()
+
+    for val in values:
+        if key(val) not in val_set:
+            val_set.add(key(val))
+            val_list.append(val)
+    return val_list
+
+
 def sorted_al(adj_list: dict[str,set[str]]) -> dict[str,list[str]]:
     """
     Sort an adjacency list.
@@ -37,7 +63,12 @@ def sorted_al(adj_list: dict[str,set[str]]) -> dict[str,list[str]]:
     return sl
 
 
-def adjacency(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
+def adjacency(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+    *,
+    directed: bool = True,
+) -> dict[str,set[str]]:
     """
     Make an adjacency list.
 
@@ -53,13 +84,40 @@ def adjacency(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
     {'a': {'b'}, 'b': {'c'}, 'c': {'a'}}
     >>> sorted_al(adjacency([('a','c'), ('a','b'), ('b','c'), ('c','a')]))
     {'a': ['b', 'c'], 'b': ['c'], 'c': ['a']}
+    >>> adjacency([('a','b'), ('b','c'), ('c','a')], ('d','a','e'))
+    {'a': {'b'}, 'b': {'c'}, 'c': {'a'}, 'd': set(), 'e': set()}
+
+    >>> adjacency([], directed=False)
+    {}
+    >>> adjacency([('a', 'A')], directed=False)
+    {'a': {'A'}, 'A': {'a'}}
+    >>> sorted_al(adjacency([('a','b'), ('b','c'), ('c','a')], directed=False))
+    {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b']}
+    >>> sorted_al(adjacency([('a','c'), ('a','b'), ('b','c'), ('c','a')],
+    ...                     directed=False))
+    {'a': ['b', 'c'], 'c': ['a', 'b'], 'b': ['a', 'c']}
+    >>> sorted_al(adjacency([('a','b'), ('b','c'), ('c','a')], ('d','a','e'),
+    ...                     directed=False))
+    {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b'], 'd': [], 'e': []}
     """
     adj_list = {}
+
     for source, dest in edges:
         if source in adj_list:
             adj_list[source].add(dest)
         else:
             adj_list[source] = {dest}
+
+        if not directed:
+            if dest in adj_list:
+                adj_list[dest].add(source)
+            else:
+                adj_list[dest] = {source}
+
+    for vertex in vertices:
+        if vertex not in adj_list:
+            adj_list[vertex] = set()
+
     return adj_list
 
 
@@ -86,11 +144,291 @@ def draw_graph(adj_list: dict[str,set[str]]) -> graphviz.Digraph:
     return g
 
 
+# TODO: Modify this to use a comprehension.
 def sorted_setoset(unsorted: set[frozenset]) -> list[list]:
+    """Convert a family of (frozen)sets into a nested list."""
     unsorted_list = []
     for collection in unsorted:
-        unsorted_list.append(sorted(collection))
+        unsorted_list.append(sorted(collection))  # noqa: PERF401
     return sorted(unsorted_list)
+
+
+def components(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    >>> components([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    comp_list = []
+    for a, b in edges:
+        found = None
+        for n, component in enumerate(comp_list):
+            if a in component and b not in component:
+                component.add(b)
+                if found is None:
+                    found = n
+                else:
+                    comp_list[found] |= component
+                    del comp_list[n]
+                    break
+            elif a not in component and b in component:
+                component.add(a)
+                if found is None:
+                    found = n
+                else:
+                    comp_list[found] |= component
+                    del comp_list[n]
+                    break
+            elif a in component and b in component:
+                found = n
+                break
+        if found is None:
+            comp_list.append({a,b})
+    comp_set = set()
+    for component in comp_list:
+        comp_set.add(frozenset(component))
+    return comp_set
+
+
+def components_d(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    >>> components_d([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_d(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    return _setofsets(components_dict(edges, vertices))
+
+
+def _setofsets(set_dict: dict[object,Iterable]) -> set:
+    vals = set()
+    for val in distinct(set_dict.values(), key=id):
+        vals.add(frozenset(val))
+    return vals
+
+
+def _setofsets_alt(set_dict: dict[object,Iterable]) -> set:
+    list_of_sets = distinct(set_dict.values(), key=id)
+    return set(map(frozenset, list_of_sets))
+
+
+def components_dict(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> dict[str,list[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    Approximately uses the quick-find algorithm.
+
+    >>> components_dict([])
+    {}
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(_setofsets(components_dict(edges)))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    comp_dict = {}
+    for source, dest in edges:
+        if source in comp_dict and dest in comp_dict:
+            if comp_dict[source] is not comp_dict[dest]:
+                (small,big) = (
+                    (source,dest)
+                    if len(comp_dict[source]) < len(comp_dict[dest])
+                    else (dest,source)
+                )
+                comp_dict[big] += comp_dict[small]
+                for elm in comp_dict[small]:
+                    comp_dict[elm] = comp_dict[big]
+        elif source in comp_dict:
+            comp_dict[source].append(dest)
+        elif dest in comp_dict:
+            comp_dict[dest].append(source)
+        else:
+            comp_dict[source] = [source,dest]
+            comp_dict[dest] = comp_dict[source]
+    for vertex in vertices:
+        if vertex not in comp_dict:
+            comp_dict[vertex] = [vertex]
+    return comp_dict
+
+
+def components_dict_alt(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> dict[str,list[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    uses the quick-find algorithm.
+
+    O(m log(n))
+    m = #edges
+    n = #vertices
+
+    >>> components_dict_alt([])
+    {}
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(_setofsets(components_dict_alt(edges)))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    comp_dict = {}
+    for source, dest in edges:
+        comp_dict[source] = [source]
+        comp_dict[dest] = [dest]
+    for vertex in vertices:
+        comp_dict[vertex] = [vertex]
+
+    for source, dest in edges:
+        if comp_dict[source] is not comp_dict[dest]:
+            (small,big) = (
+                (source,dest)
+                if len(comp_dict[source]) < len(comp_dict[dest])
+                else (dest,source)
+            )
+            comp_dict[big] += comp_dict[small]
+            for elm in comp_dict[small]:
+                comp_dict[elm] = comp_dict[big]
+    return comp_dict
+
+
+# FIXME: Actually implement classic quick-find.
+def components_dict_alt2(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> dict[str,list[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    Uses the classic quick-find algorithm.
+
+    >>> components_dict_alt2([])
+    {}
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(_setofsets(components_dict_alt2(edges)))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    comp_dict = {}
+    for source, dest in edges:
+        comp_dict[source] = [source]
+        comp_dict[dest] = [dest]
+    for vertex in vertices:
+        comp_dict[vertex] = [vertex]
+
+    for source, dest in edges:
+        if comp_dict[source][0] != comp_dict[dest][0]:
+            (small,big) = (
+                (source,dest)
+                if len(comp_dict[source]) < len(comp_dict[dest])
+                else (dest,source)
+            )
+            comp_dict[big] += comp_dict[small]
+            for elm in comp_dict[small]:
+                comp_dict[elm] = comp_dict[big]
+    return comp_dict
+
+
+def components_dfs(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    That thing where the paths are traversed and the entire component is found,
+    then move to the next component.
+
+    >>> components_dfs([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj_list = adjacency(edges, vertices, directed=False)
+    comp_set = set()
+    visited = set()
+
+    def explore(source, action):
+        visited.add(source)
+        action(source)
+        for dest in adj_list[source]:
+            if dest not in visited:
+                explore(dest, action)
+
+    for source in adj_list:
+        if source not in visited:
+            component = []
+            explore(source, component.append)
+            comp_set.add(frozenset(component))
+
+    return comp_set
+
+
+def devious() -> list[tuple[str,str]]:
+    """
+    Create a list of edges that defeats components_dfs.
+
+    >>> components_dfs(devious())
+    Traceback (most recent call last):
+      ...
+    RecursionError: maximum recursion depth exceeded
+    """
+    edges = []
+    labels = range(1337)
+    for index in labels:
+        edges.append((str(index),str(index+1)))  # noqa: PERF401
+    return edges
+
+
+# FIXME: Finish implementing this.
+def components_dfs_iter(
+    edges: list[tuple[str,str]],
+    vertices: Iterable[str] = (),
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    This is like components_dfs(), but it tolerates even graphs that would
+    cause it to fail with RecursionError (i.e., graphs with long chains).
+
+    >>> components_dfs_iter([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs_iter(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj_list = adjacency(edges, vertices, directed=False)
+    comp_set = set()
+    visited = set()
+
+    def explore(source, action):
+        visited.add(source)
+        action(source)
+        itst = [iter(adj_list[source])]
+
+    for source in adj_list:
+        if source not in visited:
+            component = []
+            explore(source, component.append)
+            comp_set.add(frozenset(component))
+
+    return comp_set
 
 
 # def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
