@@ -424,23 +424,26 @@ def components_quickfind_classic(
     representatives = {vertex: vertex for edge in edges for vertex in edge}
     chains = {vertex: [vertex] for vertex in representatives}
 
-    def join(to_vertex: str, from_vertex: str) -> None:
+    def join_to(to_vertex: str, from_vertex: str) -> None:
         for vertex in chains[from_vertex]:
             representatives[vertex] = to_vertex
         chains[to_vertex].extend(chains[from_vertex])
 
-    # Unite each edge's endpoints' sets by size, melding smaller into larger.
-    for u, v in edges:
+    def union(u: str, v: str) -> None:
+        # Find the parents, stopping if they are already the same.
         u = representatives[u]
         v = representatives[v]
-
         if u == v:
-            continue
+            return
 
+        # Unite components by size, melding smaller into larger.
         if len(chains[u]) < len(chains[v]):
-            join(v, u)
+            join_to(v, u)
         else:
-            join(u, v)
+            join_to(u, v)
+
+    for u, v in edges:
+        union(u, v)
 
     canonical_vertices = set(representatives.values())
     return {frozenset(chains[vertex]) for vertex in canonical_vertices}
@@ -469,20 +472,23 @@ def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
             parents[elem] = find(parents[elem])
         return parents[elem]
 
-    # Unite each edge's endpoints' sets by rank.
-    for u, v in edges:
+    def union(u: str, v: str) -> str:
+        # Find the ancestors, stopping if they are already the same.
         u = find(u)
         v = find(v)
-
         if u == v:
-            continue
+            return
 
+        # Unite the trees by rank.
         if ranks[u] < ranks[v]:
             parents[u] = v
         else:
             if ranks[u] == ranks[v]:
                 ranks[u] += 1
             parents[v] = u
+
+    for u, v in edges:
+        union(u, v)
 
     sets_by_ancestor = collections.defaultdict(list)
     for vertex in parents:
