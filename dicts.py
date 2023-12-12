@@ -626,6 +626,108 @@ def components_dfs_iter(
     return comp_set
 
 
+# NOTE: Once completed, components_dfs_iter() may cover this OR the one below.
+def components_dfs_iter_iterators(
+    edges: list[tuple[str,str]],
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list by iterative DFS.
+
+    This traverses the graph using iteratively implemented depth-first search,
+    from all vertices. A stack of iterators is used.
+
+    >>> components_dfs_iter_iterators([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs_iter_iterators(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+
+    def dfs(start: str, func: Callable[[str], None]) -> None:
+        stack = []
+
+        def visit(vertex: str) -> None:
+            if vertex in visited:
+                return
+            visited.add(vertex)
+            func(vertex)
+            stack.append(iter(adj[vertex]))
+
+        visit(start)
+
+        while stack:
+            try:
+                dest = next(stack[-1])
+            except StopIteration:
+                del stack[-1]
+            else:
+                visit(dest)
+
+    all_components = []
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        dfs(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
+
+
+# NOTE: Once completed, components_dfs_iter() may cover this OR the one above.
+def components_dfs_iter_indices(
+    edges: list[tuple[str,str]],
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list by iterative DFS.
+
+    This traverses the graph using iteratively implemented depth-first search,
+    from all vertices. A stack of (row, index) pairs is used.
+
+    >>> components_dfs_iter_indices([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs_iter_indices(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def dfs(start: str, func: Callable[[str], None]) -> None:
+        stack = []
+
+        def visit(vertex):
+            if vertex in visited:
+                return
+            visited.add(vertex)
+            func(vertex)
+            stack.append((list(adj[vertex]), 0))
+
+        visit(start)
+
+        while stack:
+            row, index = stack[-1]
+            if len(row) == index:
+                del stack[-1]
+            else:
+                dest = row[index]
+                stack[-1] = (row, index + 1)
+                visit(dest)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        dfs(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
+
+
 # NOTE: This may be "reset" into an exercise, or replaced with a completed one.
 def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
     """
