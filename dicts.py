@@ -431,262 +431,262 @@ def components_dfs_iter(
     return comp_set
 
 
-# def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list.
-#
-#     >>> components_quickfind([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_quickfind(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     # Make singleton sets.
-#     sets = {vertex: [vertex] for edge in edges for vertex in edge}
-#
-#     def join(to_set: list[str], from_set: list[str]) -> None:
-#         for vertex in from_set:
-#             sets[vertex] = to_set
-#         to_set.extend(from_set)
-#
-#     # Unite each edge's endpoints' sets by size, melding smaller into larger.
-#     for u, v in edges:
-#         u_set = sets[u]
-#         v_set = sets[v]
-#
-#         if u_set is v_set:
-#             continue
-#
-#         if len(u_set) < len(v_set):
-#             join(v_set, u_set)
-#         else:
-#             join(u_set, v_set)
-#
-#     sets_by_id = {id(component): component for component in sets.values()}
-#     return {frozenset(component) for component in sets_by_id.values()}
-#
-#
-# def components_quickfind_classic(
-#     edges: list[tuple[str,str]],
-# ) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list.
-#
-#     This uses classic quick-find (with representative elements), in contrast to
-#     components(), which is also quick-find but uses list references themselves.
-#
-#     >>> components_quickfind_classic([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_quickfind_classic(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     # Make singleton sets.
-#     representatives = {vertex: vertex for edge in edges for vertex in edge}
-#     chains = {vertex: [vertex] for vertex in representatives}
-#
-#     def join(to_vertex: str, from_vertex: str) -> None:
-#         for vertex in chains[from_vertex]:
-#             representatives[vertex] = to_vertex
-#         chains[to_vertex].extend(chains[from_vertex])
-#
-#     # Unite each edge's endpoints' sets by size, melding smaller into larger.
-#     for u, v in edges:
-#         u = representatives[u]
-#         v = representatives[v]
-#
-#         if u == v:
-#             continue
-#
-#         if len(chains[u]) < len(chains[v]):
-#             join(v, u)
-#         else:
-#             join(u, v)
-#
-#     canonical_vertices = set(representatives.values())
-#     return {frozenset(chains[vertex]) for vertex in canonical_vertices}
-#
-#
-# def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list.
-#
-#     This uses union by rank with path compression.
-#
-#     >>> components_quickunion([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_quickunion(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     # Make singleton sets.
-#     parents = {vertex: vertex for edge in edges for vertex in edge}
-#     ranks = {vertex: 0 for vertex in parents}
-#
-#     def find(elem: str) -> str:
-#         if elem != parents[elem]:
-#             parents[elem] = find(parents[elem])
-#         return parents[elem]
-#
-#     # Unite each edge's endpoints' sets by rank.
-#     for u, v in edges:
-#         u = find(u)
-#         v = find(v)
-#
-#         if u == v:
-#             continue
-#
-#         if ranks[u] < ranks[v]:
-#             parents[u] = v
-#         else:
-#             if ranks[u] == ranks[v]:
-#                 ranks[u] += 1
-#             parents[v] = u
-#
-#     sets_by_ancestor = collections.defaultdict(list)
-#     for vertex in parents:
-#         sets_by_ancestor[find(vertex)].append(vertex)
-#     return {frozenset(component) for component in sets_by_ancestor.values()}
-#
-#
-# def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
-#     """
-#     Make an adjacency list for an undirected graph.
-#
-#     >>> adjacency_undirected([])
-#     {}
-#     >>> adjacency_undirected([('a', 'A')])
-#     {'a': {'A'}, 'A': {'a'}}
-#     >>> sorted_al(adjacency_undirected([('a','b'), ('b','c'), ('c','a')]))
-#     {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b']}
-#     >>> edges = [('a','c'), ('a','b'), ('b','c'), ('c','a')]
-#     >>> sorted_al(adjacency_undirected(edges))
-#     {'a': ['b', 'c'], 'c': ['a', 'b'], 'b': ['a', 'c']}
-#     >>> sorted_al(adjacency_undirected([('a', 'b'), ('c', 'b'), ('d', 'a')]))
-#     {'a': ['b', 'd'], 'b': ['a', 'c'], 'c': ['b'], 'd': ['a']}
-#     """
-#     adj = collections.defaultdict(set)
-#     for u, v in edges:
-#         adj[u].add(v)
-#         adj[v].add(u)
-#     return dict(adj)
-#
-#
-# def components_dfs_rec(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list, by recursive DFS.
-#
-#     This traverses the graph using recursively implemented depth-first search,
-#     from all vertices.
-#
-#     >>> components_dfs_rec([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_dfs_rec(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     adj = adjacency_undirected(edges)
-#     visited = set()
-#     all_components = []
-#
-#     def dfs(src: str, func: Callable[[str], None]) -> None:
-#         if src in visited:
-#             return
-#         visited.add(src)
-#         func(src)
-#         for dest in adj[src]:
-#             dfs(dest, func)
-#
-#     for start in adj:
-#         if start in visited:
-#             continue
-#         all_components.append([])
-#         dfs(start, all_components[-1].append)
-#
-#     return {frozenset(component) for component in all_components}
-#
-#
-# def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list, by stack-based search.
-#
-#     This traverses the graph using stack-based search, from all vertices. It is
-#     a naturally iterative algorithm that is somewhat similar to, but not the
-#     same as, iterative DFS. See:
-#
-#     https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html
-#
-#     >>> components_stack([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_stack(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     adj = adjacency_undirected(edges)
-#     visited = set()
-#     all_components = []
-#
-#     def stack_search(src: str, func: Callable[[str], None]) -> None:
-#         visited.add(src)
-#         stack = [src]
-#
-#         while stack:
-#             src = stack.pop()
-#             func(src)
-#             for dest in adj[src]:
-#                 if dest in visited:
-#                     continue
-#                 visited.add(dest)
-#                 stack.append(dest)
-#
-#     for start in adj:
-#         if start in visited:
-#             continue
-#         all_components.append([])
-#         stack_search(start, all_components[-1].append)
-#
-#     return {frozenset(component) for component in all_components}
-#
-#
-# def components_bfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
-#     """
-#     Identify the connected components from an edge list, by BFS.
-#
-#     This traverses the graph using breadth-first search, from all vertices.
-#
-#     >>> components_bfs([])
-#     set()
-#     >>> edges = [('1','2'), ('1','3'), ('4','5'),
-#     ...          ('5','6'), ('3','7'), ('2','7')]
-#     >>> sorted_setoset(components_bfs(edges))
-#     [['1', '2', '3', '7'], ['4', '5', '6']]
-#     """
-#     adj = adjacency_undirected(edges)
-#     visited = set()
-#     all_components = []
-#
-#     def bfs(src: str, func: Callable[[str], None]) -> None:
-#         visited.add(src)
-#         queue = collections.deque((src,))
-#
-#         while queue:
-#             src = queue.popleft()
-#             func(src)
-#             for dest in adj[src]:
-#                 if dest in visited:
-#                     continue
-#                 visited.add(dest)
-#                 queue.append(dest)
-#
-#     for start in adj:
-#         if start in visited:
-#             continue
-#         all_components.append([])
-#         bfs(start, all_components[-1].append)
-#
-#     return {frozenset(component) for component in all_components}
+def components_quickfind(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    >>> components_quickfind([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickfind(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    # Make singleton sets.
+    sets = {vertex: [vertex] for edge in edges for vertex in edge}
+
+    def join(to_set: list[str], from_set: list[str]) -> None:
+        for vertex in from_set:
+            sets[vertex] = to_set
+        to_set.extend(from_set)
+
+    # Unite each edge's endpoints' sets by size, melding smaller into larger.
+    for u, v in edges:
+        u_set = sets[u]
+        v_set = sets[v]
+
+        if u_set is v_set:
+            continue
+
+        if len(u_set) < len(v_set):
+            join(v_set, u_set)
+        else:
+            join(u_set, v_set)
+
+    sets_by_id = {id(component): component for component in sets.values()}
+    return {frozenset(component) for component in sets_by_id.values()}
+
+
+def components_quickfind_classic(
+    edges: list[tuple[str,str]],
+) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    This uses classic quick-find (with representative elements), in contrast to
+    components(), which is also quick-find but uses list references themselves.
+
+    >>> components_quickfind_classic([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickfind_classic(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    # Make singleton sets.
+    representatives = {vertex: vertex for edge in edges for vertex in edge}
+    chains = {vertex: [vertex] for vertex in representatives}
+
+    def join(to_vertex: str, from_vertex: str) -> None:
+        for vertex in chains[from_vertex]:
+            representatives[vertex] = to_vertex
+        chains[to_vertex].extend(chains[from_vertex])
+
+    # Unite each edge's endpoints' sets by size, melding smaller into larger.
+    for u, v in edges:
+        u = representatives[u]
+        v = representatives[v]
+
+        if u == v:
+            continue
+
+        if len(chains[u]) < len(chains[v]):
+            join(v, u)
+        else:
+            join(u, v)
+
+    canonical_vertices = set(representatives.values())
+    return {frozenset(chains[vertex]) for vertex in canonical_vertices}
+
+
+def components_quickunion(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list.
+
+    This uses union by rank with path compression.
+
+    >>> components_quickunion([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_quickunion(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    # Make singleton sets.
+    parents = {vertex: vertex for edge in edges for vertex in edge}
+    ranks = {vertex: 0 for vertex in parents}
+
+    def find(elem: str) -> str:
+        if elem != parents[elem]:
+            parents[elem] = find(parents[elem])
+        return parents[elem]
+
+    # Unite each edge's endpoints' sets by rank.
+    for u, v in edges:
+        u = find(u)
+        v = find(v)
+
+        if u == v:
+            continue
+
+        if ranks[u] < ranks[v]:
+            parents[u] = v
+        else:
+            if ranks[u] == ranks[v]:
+                ranks[u] += 1
+            parents[v] = u
+
+    sets_by_ancestor = collections.defaultdict(list)
+    for vertex in parents:
+        sets_by_ancestor[find(vertex)].append(vertex)
+    return {frozenset(component) for component in sets_by_ancestor.values()}
+
+
+def adjacency_undirected(edges: list[tuple[str,str]]) -> dict[str,set[str]]:
+    """
+    Make an adjacency list for an undirected graph.
+
+    >>> adjacency_undirected([])
+    {}
+    >>> adjacency_undirected([('a', 'A')])
+    {'a': {'A'}, 'A': {'a'}}
+    >>> sorted_al(adjacency_undirected([('a','b'), ('b','c'), ('c','a')]))
+    {'a': ['b', 'c'], 'b': ['a', 'c'], 'c': ['a', 'b']}
+    >>> edges = [('a','c'), ('a','b'), ('b','c'), ('c','a')]
+    >>> sorted_al(adjacency_undirected(edges))
+    {'a': ['b', 'c'], 'c': ['a', 'b'], 'b': ['a', 'c']}
+    >>> sorted_al(adjacency_undirected([('a', 'b'), ('c', 'b'), ('d', 'a')]))
+    {'a': ['b', 'd'], 'b': ['a', 'c'], 'c': ['b'], 'd': ['a']}
+    """
+    adj = collections.defaultdict(set)
+    for u, v in edges:
+        adj[u].add(v)
+        adj[v].add(u)
+    return dict(adj)
+
+
+def components_dfs_rec(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list, by recursive DFS.
+
+    This traverses the graph using recursively implemented depth-first search,
+    from all vertices.
+
+    >>> components_dfs_rec([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_dfs_rec(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def dfs(src: str, func: Callable[[str], None]) -> None:
+        if src in visited:
+            return
+        visited.add(src)
+        func(src)
+        for dest in adj[src]:
+            dfs(dest, func)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        dfs(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
+
+
+def components_stack(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list, by stack-based search.
+
+    This traverses the graph using stack-based search, from all vertices. It is
+    a naturally iterative algorithm that is somewhat similar to, but not the
+    same as, iterative DFS. See:
+
+    https://11011110.github.io/blog/2013/12/17/stack-based-graph-traversal.html
+
+    >>> components_stack([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_stack(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def stack_search(src: str, func: Callable[[str], None]) -> None:
+        visited.add(src)
+        stack = [src]
+
+        while stack:
+            src = stack.pop()
+            func(src)
+            for dest in adj[src]:
+                if dest in visited:
+                    continue
+                visited.add(dest)
+                stack.append(dest)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        stack_search(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
+
+
+def components_bfs(edges: list[tuple[str,str]]) -> set[frozenset[str]]:
+    """
+    Identify the connected components from an edge list, by BFS.
+
+    This traverses the graph using breadth-first search, from all vertices.
+
+    >>> components_bfs([])
+    set()
+    >>> edges = [('1','2'), ('1','3'), ('4','5'),
+    ...          ('5','6'), ('3','7'), ('2','7')]
+    >>> sorted_setoset(components_bfs(edges))
+    [['1', '2', '3', '7'], ['4', '5', '6']]
+    """
+    adj = adjacency_undirected(edges)
+    visited = set()
+    all_components = []
+
+    def bfs(src: str, func: Callable[[str], None]) -> None:
+        visited.add(src)
+        queue = collections.deque((src,))
+
+        while queue:
+            src = queue.popleft()
+            func(src)
+            for dest in adj[src]:
+                if dest in visited:
+                    continue
+                visited.add(dest)
+                queue.append(dest)
+
+    for start in adj:
+        if start in visited:
+            continue
+        all_components.append([])
+        bfs(start, all_components[-1].append)
+
+    return {frozenset(component) for component in all_components}
