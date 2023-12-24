@@ -4,3 +4,4 @@ ipykernel
 pyright
 pytest
 ruff
+useful_types
