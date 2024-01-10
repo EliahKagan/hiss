@@ -1289,4 +1289,25 @@ def equal(*iterables, key=None):
     )
 
 
+def tee_two(iterable):
+    """
+    Return two independent iterators into an iterable.
+
+    Asymptotic time and auxiliary space complexity are optimal, and no object
+    is preserved any longer than necessary.
+
+    >>> from itertools import islice
+    >>> def f():
+    ...     for i in range(10):
+    ...         try:
+    ...             print(i)
+    ...             yield i
+    ...         finally:
+    ...             print('Done.')
+    >>> it1, it2 = tee_two(f())
+    >>> a = []
+    >>> a.extend()
+    """
+
+
 # FIXME: Create the tee_two and my_tee exercises here.
